@@ -19,7 +19,7 @@ set label "M7" at 67,22 center
 set object 8 rect from 80,0 to 96,23
 set label "M8" at 88,11 center
 set xtics 20
-set ytics 20
+set ytics 16
 plot [0:100][0:80]0
 set terminal png size 1024,768
 set output "output.png"

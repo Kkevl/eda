@@ -102,8 +102,8 @@ set object 49 rect from 1078,3234 to 1470,3976
 set label "M049" at 1274,3605 center
 set object 50 rect from 5279,0 to 5810,2530
 set label "M050" at 5544,1265 center
-set xtics 20
-set ytics 20
+set xtics 1200
+set ytics 1600
 plot [0:6000][0:8000]0
 set terminal png size 1024,768
 set output "output.png"

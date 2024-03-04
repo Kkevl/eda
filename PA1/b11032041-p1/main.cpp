@@ -25,7 +25,8 @@ int main(int argc,char **argv){
     //load blocks
     fin>>strbuffer>>boundarx>>boundary;
     fin>>strbuffer>>macro;
-    
+    xtics = boundarx/5;
+    ytics = boundary/5;
     //start reading each blocks
     for (int i = 0; i < macro; i++){
         fin>>strbuffer>>x1>>y1>>x2>>y2;

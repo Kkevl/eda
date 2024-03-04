@@ -68,8 +68,8 @@ set object 32 rect from 840,0 to 959,357
 set label "bk9c" at 899,178 center
 set object 33 rect from 84,560 to 168,679
 set label "bk9d" at 126,619 center
-set xtics 20
-set ytics 20
+set xtics 280
+set ytics 240
 plot [0:1400][0:1200]0
 set terminal png size 1024,768
 set output "output.png"
