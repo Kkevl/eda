@@ -2,11 +2,15 @@
 #include<fstream>
 #include<string>
 #include<vector>
+#include "plotting.h"
 using namespace std;
-int main(int argc,char **argv){
+int main(
+    // int argc,char **argv
+    ){
     //input
     fstream fin;
-    string file = argv[1], ofile = argv[2];
+    string  file = "../PA1_testcases/case8.txt"//argv[1]
+        ,ofile = "../outputs/output8.txt";//argv[2];
     fin.open(file, fstream::in);
     if(!fin.is_open()){
         cout << "Error: the input file is not opened!!" << endl;
@@ -36,7 +40,8 @@ int main(int argc,char **argv){
         positions.push_back(x2);
         positions.push_back(y2);
     }
-
+    plottings pt;
+    pt.plot();
     //output
     fstream fout;
     fout.open(ofile,fstream::out);
