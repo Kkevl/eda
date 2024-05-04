@@ -65,7 +65,7 @@ int main(
     //end
     fout<<"set xtics "<<xtics<<endl
         <<"set ytics "<<ytics<<endl
-        <<"plot [0:"<<boundarx<<"][0:"<<boundary<<"]0\n"
+        <<"plot [0:"<<boundarx<<"][0:"<<boundary<<"]\n"
         <<"set terminal png size 1024,768\n"
         <<"set output \"output.png\"\n"
         <<"replot";    
