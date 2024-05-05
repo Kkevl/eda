@@ -22,7 +22,7 @@ private:
         boundary = 400,
         bestHeight = 3000,
         bestWidth = 3000,
-        endtime = 15,
+        endtime = 599,
         x,y; // load file use
     float minaspectratio = 0.5,
         maxaspectratio = 2;

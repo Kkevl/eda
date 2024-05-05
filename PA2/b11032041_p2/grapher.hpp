@@ -19,8 +19,8 @@ public:
         tempcost = 0,
         x = 0,y = 0,temp = 0,i = 0,j = 0; // dummy use
     // gamma_plus is the random the relation of each block, pos is the axis in the dag graph
-    vector<int> gamma_plus,tempgamma_plus,pos_plus,
-                gamma_minus,tempgamma_minus,pos_minus;
+    vector<int> gamma_plus,pos_plus,
+                gamma_minus,pos_minus;
     vector< vector<int> > directiongraph;
     vector<block> bstack;
     DAG* HorizontalGraph,*VerticalGraph;
@@ -90,8 +90,6 @@ inline void grapher::initialize(){
     //debug use
     // gamma_plus = {1,3,7,6,5,2,4};
     // gamma_minus = {4,7,5,3,2,1,6};
-    tempgamma_plus = gamma_plus;
-    tempgamma_minus = gamma_minus;
     // print out gammas
     // we use when the looping value == index(the real number), output the looping index
     // cout<<endl<<"Gamma_plus_positions = ";
@@ -128,17 +126,25 @@ inline void grapher::Costcalculation(){
 
     // calaulate max and min
     tempcost = (thisHeight>thisWidth?thisHeight:thisWidth)*(thisHeight>thisWidth?thisHeight:thisWidth);
-    if ( cost> tempcost && tempcost >0){ 
+    if ( cost> tempcost ){ 
         // if cost is lesser, than remember the bstack
         cost = tempcost;
         bestHeight = thisHeight;
         bestWidth = thisWidth;
-        tempgamma_plus = gamma_plus;
-        tempgamma_minus = gamma_minus;
-    }
-    else{
-        // gamma_plus = tempgamma_plus;
-        // gamma_minus = tempgamma_minus;
+        // dummy prevent
+        if ( cost < 0 ){
+            cout<<"error!"<<endl;
+            cout<<"plus = "<<endl;
+            for (int i = 0; i < gamma_plus.size(); i++){
+                cout<<gamma_plus[i]<<" ";
+            }
+            cout<<"Minus = "<<endl;
+            for (int i = 0; i < gamma_minus.size(); i++){
+                cout<<gamma_minus[i]<<" ";
+            }            
+            exit(0);
+        }
+        
     }
     return;
 }

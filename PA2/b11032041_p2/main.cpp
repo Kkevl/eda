@@ -9,18 +9,17 @@ using namespace std;
 
 void testDAG();
 
-int main( 
-    // int argc,char **argv
-    ){
+int main(  int argc,char **argv  ){
     //file fixed
-    string argv[3] = {"", "../PA2_testcases/floorplan_100.txt","../output/100.out"};
+    // string argv[3] = {"", "../PA2_testcases/floorplan_30.txt","../output/30.out"};
     string file = argv[1], ofile = argv[0];
     plotmanager p1;
     srand(time(NULL));
     p1.loadfile(file);
     p1.createplot();
     p1.outputfile(argv[2]);
-    p1.outputpic();
+    // use this can output the .gp file, but the axis have to be adjust mannuelly
+    // p1.outputpic(); 
     p1.outputlog();
     // testDAG();
     
