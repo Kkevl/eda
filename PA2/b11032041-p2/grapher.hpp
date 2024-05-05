@@ -6,6 +6,7 @@
 #include<stdlib.h>
 #include<vector>
 #include<time.h>
+#include<math.h>
 #include"DAG.hpp"
 #include"block.hpp"
 using namespace std;
@@ -19,8 +20,10 @@ public:
         tempcost = 0,
         bestHeight = 0,
         bestWidth = 0,
-        temperature = INT_MAX,
         x = 0,y = 0,temp = 0,i = 0,j = 0; // dummy use
+    float coolingrate = 0.85,
+        temperature = 18000000000, 
+        heatbound;
     // gamma_plus is the random the relation of each block, pos is the axis in the dag graph
     vector<int> gamma_plus,pos_plus, tempgamma_plus,
                 gamma_minus,pos_minus, tempgamma_minus;
@@ -93,8 +96,8 @@ inline void grapher::initialize(){
     // gamma_plus = {1,3,7,6,5,2,4};
     // gamma_minus = {4,7,5,3,2,1,6};
 
-    tempgamma_plus = gamma_plus;
-    tempgamma_minus = gamma_minus;
+    tempgamma_plus.assign( gamma_plus.begin(),gamma_plus.end());
+    tempgamma_minus.assign( gamma_minus.begin(),gamma_minus.end());
     
     // print out gammas
     // we use when the looping value == index(the real number), output the looping index
@@ -130,13 +133,24 @@ inline void grapher::Costcalculation( int time ){
     thisWidth = HorizontalGraph->maxlength;
 
     // calaulate max and min
-    tempcost = (thisHeight>thisWidth?thisHeight:thisWidth)*(thisHeight>thisWidth?thisHeight:thisWidth);
+    tempcost = (thisHeight>thisWidth?thisHeight:thisWidth);
+                //since it's same to calculate 1 dimention
+                //*(thisHeight>thisWidth?thisHeight:thisWidth);
 
     if ( cost> tempcost ){ 
         // if cost is lesser, than remember the bstack
         cost = tempcost;
         bestHeight = thisHeight;
         bestWidth = thisWidth;
+        for (int i = 0; i < gamma_plus.size(); i++){
+            tempgamma_plus[i] = gamma_plus[i];
+        }
+        for (int i = 0; i < gamma_minus.size(); i++){
+            tempgamma_minus[i] = gamma_minus[i];
+        }
+        // refresh the buffer;
+        // tempgamma_plus.assign(gamma_plus.begin(),gamma_plus.begin());
+        // tempgamma_minus.assign(gamma_minus.begin(),gamma_minus.end());
         // dummy prevent
         if ( cost < 0 ){
             cout<<"error!"<<endl;
@@ -150,13 +164,32 @@ inline void grapher::Costcalculation( int time ){
             exit(0);
         }        
     }
-    // else{
-    //     // load it with probability 
-    //     // float rate = (float)(rand()) / (float)(RAND_MAX); // falls in 1 ~ 0 
-    //     gamma_plus = tempgamma_plus;
-    //     gamma_minus = tempgamma_minus;
-    // }
-    
+    // cost <tempcost
+    else{
+        // load it with probability 
+        float rate = (float)(rand()) / (float)(RAND_MAX); // falls in 1 ~ 0
+        heatbound =  exp( (-1) * ( (tempcost - cost) / temperature ) );
+        if ( rate <= heatbound){
+            //have probability to accept the result
+            cost = tempcost;
+            bestHeight = thisHeight;
+            bestWidth = thisWidth;
+            // refresh the buffer;
+            // tempgamma_plus.assign(gamma_plus.begin(),gamma_plus.begin());
+            // tempgamma_minus.assign(gamma_minus.begin(),gamma_minus.end());
+            for (int i = 0; i < gamma_plus.size(); i++){
+                tempgamma_plus[i] = gamma_plus[i];
+            }
+            for (int i = 0; i < gamma_minus.size(); i++){
+                tempgamma_minus[i] = gamma_minus[i];
+            }
+        }
+        // else{
+        //     gamma_plus.assign(tempgamma_plus.begin(),tempgamma_plus.end());
+        //     gamma_minus.assign(tempgamma_minus.begin(),tempgamma_minus.end());
+        // }
+    }
+    temperature *= coolingrate;
     return;
 }
 
@@ -476,25 +509,26 @@ inline void grapher::perturbs_M3(){
 // print out the best solution
 inline void grapher::layout(){
     // look from gamma_minus first to gamma_minus end
-    for (int i = 0; i < gamma_minus.size(); i++){
+    for (int i = 0; i < tempgamma_minus.size(); i++){
         x = 0;
         y = 0;
         for (int j = 0 ;j < i ; j++){
             // cout<< gamma_minus[j] <<" ";
-            if ( directiongraph[ gamma_minus[i] - 1 ][ gamma_minus[j] - 1 ] == 1 ) {
+            if ( directiongraph[ tempgamma_minus[i] - 1 ][ tempgamma_minus[j] - 1 ] == 1 ) {
                 // if = 2, then add on to x axis
-                x = max<int>( x , bstack[ gamma_minus[j] - 1 ].getx2() );
+                x = max<int>( x , bstack[ tempgamma_minus[j] - 1 ].getx2() );
             }else{
-                y = max<int>( y , bstack[ gamma_minus[j] - 1 ].gety2() );
+                y = max<int>( y , bstack[ tempgamma_minus[j] - 1 ].gety2() );
             }
         }
-        bstack[ gamma_minus[i] - 1].setxy(x,y);
+        bstack[ tempgamma_minus[i] - 1].setxy(x,y);
     }
     
     // show all blocks' position
     for (int i = 0; i < numofblocks; i++){
-        cout <<endl<< bstack[ gamma_minus[i] - 1 ].name <<" "<< bstack[ gamma_minus[i] - 1 ].getx1() << " "
-             << bstack[ gamma_minus[i] - 1 ].gety1();
+        cout <<endl<< bstack[ tempgamma_minus[i] - 1 ].name <<" "
+            << bstack[ tempgamma_minus[i] - 1 ].getx1() << " "
+             << bstack[ tempgamma_minus[i] - 1 ].gety1();
     }
     
 }

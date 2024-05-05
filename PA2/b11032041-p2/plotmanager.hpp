@@ -14,7 +14,7 @@ using namespace std;
 class plotmanager{
 private:
     int numblocks = 0,
-        endtime = 2,
+        endtime = 500,
 
         // draw use
         xtics = 40,
@@ -96,7 +96,7 @@ inline void plotmanager::createplot(){
     cout<<endl<<"bestHeight = "<<bestHeight;
     bestWidth = g2->bestWidth;
     cout<<endl<<"bestWidth = "<<bestWidth;
-    cout<<endl<<"bestratiocost = "<< float(g2->cost)/(bestHeight*bestWidth);
+    cout<<endl<<"bestratiocost = "<< float(g2->cost*g2->cost)/(bestHeight*bestWidth);
     cout<<endl<<"best cost = "<<g2->cost;
 
 }
@@ -115,23 +115,25 @@ inline void plotmanager::annealing(){
 
         //execute annealing
         switch ( perturb_mode ){
-            case 1 ... 40:
-                g2->perturbs_M1();
-                break;
-            case 41 ... 80:
-                g2->perturbs_M2();
-                break;
-            case 81 ... 100:
+            case 1 ... 20:
                 g2->perturbs_M3();
                 break;
+            case 21 ... 60:
+                g2->perturbs_M2();
+                break;
+            case 61 ... 100:
+                g2->perturbs_M1();
+                break;
             default:
+                //dummy respond
                 cout<<endl<<"executing worse!"<<endl;
                 exit(1);
                 break;
         }
         // check size
         g2->Costcalculation( times++ );
-
+        cout<<endl<<"times = "<<times<<endl;
+        g2->layout();
         // setting break time
         end = time(NULL);
         diff = difftime(end,start);
@@ -144,6 +146,10 @@ inline void plotmanager::annealing(){
                 bestscorelog.push_back(g2->cost);
             }
         }
+        if (times >= 120){
+            break;
+        }
+        
     }
     
 }

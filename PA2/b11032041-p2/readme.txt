@@ -2,7 +2,7 @@
 2. 姓名：譚凱文
 3. 使用之程式語言：C++
 4. 使用之編譯平台：Linux GNU g++
-5. 檔案壓縮方式: tar zcvf b11032041-p1.tgz b11032041-p1
+5. 檔案壓縮方式: tar zcvf b11032041-p2.tgz b11032041-p2
 6. 各檔案說明：
 	b11032041-p2/main.cpp	: 主程式source code
 	b11032041-p2/block.hpp	: save for input files.
