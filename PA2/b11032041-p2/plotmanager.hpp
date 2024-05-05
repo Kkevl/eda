@@ -14,7 +14,8 @@ using namespace std;
 class plotmanager{
 private:
     int numblocks = 0,
-        timer = 0,
+        endtime = 2,
+
         // draw use
         xtics = 40,
         ytics = 40,
@@ -22,8 +23,7 @@ private:
         boundary = 400,
         bestHeight = 3000,
         bestWidth = 3000,
-        endtime = 599,
-        x,y; // load file use
+        x,y; // dummy use
     float minaspectratio = 0.5,
         maxaspectratio = 2;
     string strbuffer;
@@ -108,20 +108,20 @@ inline void plotmanager::annealing(){
     while ( diff < endtime ){ // wait until 10 minutes
         
         // switchcase to choose perturb
-        perturb_mode = rand()%(33);
+        perturb_mode = rand()%(100) + 1;
 
         // counting
         // cout<<"times:"<<times++<<" ";
 
         //execute annealing
-        switch ( perturb_mode%3 + 1 ){
-            case 1:
+        switch ( perturb_mode ){
+            case 1 ... 40:
                 g2->perturbs_M1();
                 break;
-            case 2:
+            case 41 ... 80:
                 g2->perturbs_M2();
                 break;
-            case 3:
+            case 81 ... 100:
                 g2->perturbs_M3();
                 break;
             default:
@@ -130,7 +130,7 @@ inline void plotmanager::annealing(){
                 break;
         }
         // check size
-        g2->Costcalculation();
+        g2->Costcalculation( times++ );
 
         // setting break time
         end = time(NULL);
@@ -146,9 +146,6 @@ inline void plotmanager::annealing(){
         }
     }
     
-    // total finish time
-    // cout<<endl<<"end - start = "<< end - start <<endl;
-    // cout<<"diff time = "<<diff<<endl;
 }
 
 inline void plotmanager::outputfile(string file){
