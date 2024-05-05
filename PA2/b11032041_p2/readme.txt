@@ -19,4 +19,4 @@
    	   執行檔的命令格式為 :
    	   ./genPlot [input file name] [output file name]
 
-	   ex: ./genPlot input.txt output.gp
+	   ex: ./floorplanner input.txt output.out

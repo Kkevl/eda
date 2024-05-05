@@ -2,7 +2,7 @@ CC=g++
 LDFLAGS=-std=c++11 -O3 -lm
 SOURCES=*.cpp
 OBJECTS=$(SOURCES:.c=.o)
-EXECUTABLE=genplot
+EXECUTABLE=floorplanner
 INCLUDES=*.h
 
 all: $(SOURCES) $(EXECUTABLE)

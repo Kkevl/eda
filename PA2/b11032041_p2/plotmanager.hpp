@@ -4,9 +4,11 @@
 #include<string>
 #include<vector>
 #include<ctime>
-#include <time.h>
+#include<time.h>
+#include <climits>
 #include"grapher.hpp"
 #include"block.hpp"
+#include"DAG.hpp"
 using namespace std;
 
 class plotmanager{
@@ -14,12 +16,13 @@ private:
     int numblocks = 0,
         timer = 0,
         // draw use
-        xtics = 20,
-        ytics = 20,
+        xtics = 40,
+        ytics = 40,
         boundarx = 400,
         boundary = 400,
-        MaxHeight = 3000,
-        MaxWidth = 3000,
+        bestHeight = 3000,
+        bestWidth = 3000,
+        endtime = 15,
         x,y; // load file use
     float minaspectratio = 0.5,
         maxaspectratio = 2;
@@ -27,9 +30,8 @@ private:
     block *tempblock;
 
     time_t start, end;
-    
     vector<block> bstack;
-
+    vector<int> bestscorelog;
 public:
     grapher *g2 = NULL;
     plotmanager();
@@ -40,7 +42,8 @@ public:
     void annealing();
 
     void outputfile(string file);
-    void outputpic(string file);
+    void outputpic();
+    void outputlog();
 };
 plotmanager::plotmanager(){
     start = time(NULL);
@@ -66,6 +69,7 @@ void plotmanager::loadfile(string file){
         fin>>strbuffer>>x>>y;
         tempblock = new block(x,y,strbuffer);
 
+        // checking validation
         // data input might be false, so remeber to correct it!
         tempblock->validateaspectratio( minaspectratio , maxaspectratio);
         
@@ -77,53 +81,79 @@ void plotmanager::loadfile(string file){
 inline void plotmanager::createplot(){
     grapher g1(numblocks, bstack);
     g2 = &g1;
-    g1.initialize();
-    // check validation
-    
-        // check the gamma plot
+    g2->initialize(); // already have make dirgraph and calculate it
 
-    // make direction graph to help create 
-    g1.makedirgraph(); 
-
-        // check size
     annealing();
-        // g1.Costcalculation();
-    // finishing
-    g1.showplot();
-    bstack = g1.bstack;
 
-    //debug use
-    // cout<<endl<<"after change:";
-    // // show all blocks' position
-    // for (int i = 0; i < numblocks; i++){
-    //     cout <<endl<< bstack[ i ].name <<" "<< bstack[ i ].getx1() << " "
-    //          << bstack[ i ].gety1();
-    // }
+    // finishing
+    // get the best sol
+
+    cout<<endl<<"best :";
+    g2->layout(); // load the axis
+    bstack = g2->bstack;
+
+    bestHeight = g2->bestHeight;
+    cout<<endl<<"bestHeight = "<<bestHeight;
+    bestWidth = g2->bestWidth;
+    cout<<endl<<"bestWidth = "<<bestWidth;
+    cout<<endl<<"bestratiocost = "<< float(g2->cost)/(bestHeight*bestWidth);
+    cout<<endl<<"best cost = "<<g2->cost;
+
 }
 
 inline void plotmanager::annealing(){
-    for (int i = 0; i < 1000000000; i++){
-        //dummy wait
-    }
-    
-    end = time(NULL);
-    double diff = difftime(end, start);
+    // end = time(NULL);
+    double diff = 0,tempdiff;
+    int perturb_mode,times = 0;
+    while ( diff < endtime ){ // wait until 10 minutes
+        
+        // switchcase to choose perturb
+        perturb_mode = rand()%(33);
 
-    while (diff < 600){ // wait until 10 minutes
-        //do annealing
+        // counting
+        // cout<<"times:"<<times++<<" ";
+
+        //execute annealing
+        switch ( perturb_mode%3 + 1 ){
+            case 1:
+                g2->perturbs_M1();
+                break;
+            case 2:
+                g2->perturbs_M2();
+                break;
+            case 3:
+                g2->perturbs_M3();
+                break;
+            default:
+                cout<<endl<<"executing worse!"<<endl;
+                exit(1);
+                break;
+        }
+        // check size
+        g2->Costcalculation();
+
+        // setting break time
+        end = time(NULL);
         diff = difftime(end,start);
+
         // debug use
-        break;
+        if (tempdiff != diff){
+            tempdiff = diff;
+            cout<<"clock : "<<diff<<endl;
+            if (int(tempdiff)%5 == 0){
+                bestscorelog.push_back(g2->cost);
+            }
+        }
     }
     
-
-    cout<<"start = "<<start<<endl;
-    cout<<"end = "<<end<<endl;
-    cout<<"diff time = "<<diff<<endl;
+    // total finish time
+    // cout<<endl<<"end - start = "<< end - start <<endl;
+    // cout<<"diff time = "<<diff<<endl;
 }
 
 inline void plotmanager::outputfile(string file){
     //  output form:
+    // < chip_Area>
     // < chip_width > < chip_height >
     // < maccro_name > < maccro_width > < maccro_height > <x1> <y1> <x2> <y2>
     fstream fout;
@@ -133,8 +163,8 @@ inline void plotmanager::outputfile(string file){
 	    exit(1);
     }
     
-    fout<<MaxWidth<<" "<<MaxHeight<<endl;
-
+    // chip titles
+    fout<< bestWidth <<" "<< bestHeight <<endl;
     //blocks
     for (int i = 0; i < numblocks; i++){
         fout<<bstack[i].name<<" "<<bstack[i].width<<" "<<bstack[i].height<<" "
@@ -144,9 +174,9 @@ inline void plotmanager::outputfile(string file){
 
 }
 
-void plotmanager::outputpic(string file){
-    
+void plotmanager::outputpic(){
     //output
+    string file = "../output/"+to_string(numblocks)+".gp";
     fstream fout;
     fout.open(file,fstream::out);
     if(!fout.is_open()){
@@ -168,9 +198,9 @@ void plotmanager::outputpic(string file){
     }
 
     //end
-    fout<<"set xtics "<<20*numblocks
+    fout<<"set xtics "<<40*numblocks
         <<endl
-        <<"set ytics "<<20*numblocks
+        <<"set ytics "<<40*numblocks
         <<endl
         <<"plot [0:"<<boundarx*numblocks<<"][0:"<<boundary*numblocks<<"]0\n"
         <<"set terminal png size 1024,1024\n"
@@ -178,3 +208,16 @@ void plotmanager::outputpic(string file){
         <<"replot";
 }
 
+inline void plotmanager::outputlog(){
+    string file = "../output/logs/"+to_string(numblocks)+".log";
+    fstream fout;
+    fout.open(file,fstream::out);
+    if(!fout.is_open()){
+        cout << "Error: the output file is not opened!!" << endl;
+	    exit(1);
+    }
+    for (int i = 0; i < bestscorelog.size(); i++){
+        fout<<i<<" "<<bestscorelog[i]<<endl;
+    }
+    
+}

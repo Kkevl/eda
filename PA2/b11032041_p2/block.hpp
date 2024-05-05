@@ -1,8 +1,9 @@
+#pragma once
 #include<iostream>
 #include<fstream>
 #include<string>
+#include<math.h>
 #include<vector>
-#pragma once
 using namespace std;
 
 class block{
@@ -61,20 +62,26 @@ inline int block::gety2(){
     return y2;
 }
 
-
 inline void block::validateaspectratio(float min, float max){
-    float i = aspectrartio;
-    int j = 0;
+    int j = 0; // use as counter
     // TO-DO adjust the size to fit the aspect constraint
-    while (aspectrartio > max || min > aspectrartio ){ // height is bigger than width
-                                                    // or width is bigger than height
-        if (j++>10){
-            break;
+    // while (aspectrartio > max || min > aspectrartio ){
+    
+    j = sqrt(area);
+    // only find the posible to fall in the region, 
+    // if the rectangle can't fall in the region, it should return false
+    for ( ; j >= (height<width?height:width) ; j--){
+        if (area % j == 0){
+            (height>width?height:width) = j;
+            (height<width?height:width) = area/j;
+            // set ratio
+            aspectrartio = float(height)/float(width);
+            if ( aspectrartio >= min && aspectrartio <= max ){
+                return;
+            }
+            else break;
         }
-        
-        cout<<"aspect error!!"<<endl;
     }
-    aspectrartio = height/width;
-    // set ratio
-    cout<<"correction!";
+    cerr<<"the block is not valid!! please check the input block is correct block!!";
+    exit(1);
 }
