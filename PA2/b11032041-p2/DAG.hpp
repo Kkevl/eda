@@ -140,11 +140,10 @@ inline void DAG::longestPath(int s){
     }
 
     // debug use
-    // cout<<"Following are longest distance from vertex "<< s <<endl;
-    // for (int i = 0; i < V; i++){
-    //     (dist[i] == NINF) ? cout<<"INF ":cout<<dist[i]<<" ";
-    // }
-    // cout<<endl;
+    cout<<"Following are longest distance from vertex "<< s <<endl;
+    for (int i = 0; i < V; i++){
+        (dist[i] == NINF) ? cout<<"INF ":cout<<dist[i]<<" ";
+    }cout<<endl;
     
     maxlength = dist[V-1];
     dist.clear();

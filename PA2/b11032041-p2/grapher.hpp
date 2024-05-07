@@ -21,8 +21,8 @@ public:
         bestHeight = 0,
         bestWidth = 0,
         x = 0,y = 0,temp = 0,i = 0,j = 0; // dummy use
-    float coolingrate = 0.85,
-        temperature = 18000000000, 
+    float CoolingRate = 0.75,
+        temperature = 18000, 
         heatbound;
     // gamma_plus is the random the relation of each block, pos is the axis in the dag graph
     vector<int> gamma_plus,pos_plus, tempgamma_plus,
@@ -36,14 +36,15 @@ public:
     // to return the cost for annealing
     void Costcalculation( int time ); // calculate the area and count the cost(use lcs?)
 
+    void setgammaposition();
     void makedirgraph();
     void initializeDAG();
     void DAGreconnect( int u);
 
     // purturbs
-    void perturbs_M1(); // annealing method 1 // random switch 2 blocks in 2 graph
-    void perturbs_M2(); // annealing method 2 // random 
-    void perturbs_M3(); // annealing method 3 // turn the blocks around
+    void perturbs_M1(int x,int y); // annealing method 1 // random switch 2 blocks in 2 graph
+    void perturbs_M2(int x,int y); // annealing method 2 // random 
+    void perturbs_M3(int x,int y); // annealing method 3 // turn the blocks around
     
     void layout();
     
@@ -92,66 +93,47 @@ inline void grapher::initialize(){
     }
 
     //gamma presents the position of each blocks
-    //debug use
-    // gamma_plus = {1,3,7,6,5,2,4};
-    // gamma_minus = {4,7,5,3,2,1,6};
 
+    //debug use
+    // gamma_plus = {1,4,7,6,5,2,3};
+    // gamma_minus = {3,7,5,4,2,1,6};
+
+    // tempgamma save the best one now
     tempgamma_plus.assign( gamma_plus.begin(),gamma_plus.end());
     tempgamma_minus.assign( gamma_minus.begin(),gamma_minus.end());
     
-    // print out gammas
-    // we use when the looping value == index(the real number), output the looping index
-    // cout<<endl<<"Gamma_plus_positions = ";
-    for (int i = 0; i < gamma_plus.size(); i++){
-        for (int j = 0; j < gamma_plus.size(); j++){
-            if (gamma_plus[j] == i+1){
-                pos_plus[i] = j+1;
-            }
-        }
-    }
-    // cout<<endl<<"Gamma_mius_positions = ";
-    for (int i = 0; i < gamma_minus.size(); i++){
-        for (int j = 0; j < gamma_minus.size(); j++){
-            if (gamma_minus[j] == i+1){
-                pos_minus[i] = j+1;
-            }
-        }
-    }  
+    setgammaposition();
     makedirgraph();
-    initializeDAG();
     Costcalculation(0);
+    layout();
 }
 
 inline void grapher::Costcalculation( int time ){
-    // modify the dag graph and recaculate the 
-    // cout<<"Height's :"<<endl;
-    HorizontalGraph->longestPath(0);
-    // cout<<"Width's :"<<endl;
-    VerticalGraph->longestPath(0);
 
-    thisHeight = VerticalGraph->maxlength; 
-    thisWidth = HorizontalGraph->maxlength;
+    // modify the dag graph
+    // cout<<"Height's :"<<endl;
+    // HorizontalGraph->longestPath(0);
+    // cout<<"Width's :"<<endl;
+    // VerticalGraph->longestPath(0);
+    // thisHeight = VerticalGraph->maxlength; 
+    // thisWidth = HorizontalGraph->maxlength;
+
+    // recaculate the max height and width
+    layout(); // update the this height and this width
 
     // calaulate max and min
     tempcost = (thisHeight>thisWidth?thisHeight:thisWidth);
                 //since it's same to calculate 1 dimention
                 //*(thisHeight>thisWidth?thisHeight:thisWidth);
 
-    if ( cost> tempcost ){ 
+    if ( cost > tempcost ){ 
         // if cost is lesser, than remember the bstack
         cost = tempcost;
         bestHeight = thisHeight;
         bestWidth = thisWidth;
-        for (int i = 0; i < gamma_plus.size(); i++){
-            tempgamma_plus[i] = gamma_plus[i];
-        }
-        for (int i = 0; i < gamma_minus.size(); i++){
-            tempgamma_minus[i] = gamma_minus[i];
-        }
-        // refresh the buffer;
-        // tempgamma_plus.assign(gamma_plus.begin(),gamma_plus.begin());
-        // tempgamma_minus.assign(gamma_minus.begin(),gamma_minus.end());
-        // dummy prevent
+        tempgamma_plus.assign(gamma_plus.begin(),gamma_plus.end());
+        tempgamma_minus.assign(gamma_minus.begin(),gamma_minus.end());
+        // dummy prevention
         if ( cost < 0 ){
             cout<<"error!"<<endl;
             cout<<"plus = "<<endl;
@@ -164,33 +146,46 @@ inline void grapher::Costcalculation( int time ){
             exit(0);
         }        
     }
-    // cost <tempcost
-    else{
+    else{   // cost <tempcost
         // load it with probability 
         float rate = (float)(rand()) / (float)(RAND_MAX); // falls in 1 ~ 0
         heatbound =  exp( (-1) * ( (tempcost - cost) / temperature ) );
-        if ( rate <= heatbound){
+        if ( rate < heatbound){
             //have probability to accept the result
             cost = tempcost;
             bestHeight = thisHeight;
             bestWidth = thisWidth;
             // refresh the buffer;
-            // tempgamma_plus.assign(gamma_plus.begin(),gamma_plus.begin());
-            // tempgamma_minus.assign(gamma_minus.begin(),gamma_minus.end());
-            for (int i = 0; i < gamma_plus.size(); i++){
-                tempgamma_plus[i] = gamma_plus[i];
-            }
-            for (int i = 0; i < gamma_minus.size(); i++){
-                tempgamma_minus[i] = gamma_minus[i];
+            tempgamma_plus.assign(gamma_plus.begin(),gamma_plus.end());
+            tempgamma_minus.assign(gamma_minus.begin(),gamma_minus.end());
+        }
+        else{
+            gamma_plus.assign(tempgamma_plus.begin(),tempgamma_plus.end());
+            gamma_minus.assign(tempgamma_minus.begin(),tempgamma_minus.end());
+        }
+    }
+    temperature *= CoolingRate;
+    setgammaposition();
+    makedirgraph();
+    return;
+}
+
+inline void grapher::setgammaposition(){
+    // we use when the looping value == index(the real number), output the looping index
+    for (int i = 0; i < gamma_plus.size(); i++){
+        for (int j = 0; j < gamma_plus.size(); j++){
+            if (gamma_plus[j] == i+1){
+                pos_plus[i] = j+1;
             }
         }
-        // else{
-        //     gamma_plus.assign(tempgamma_plus.begin(),tempgamma_plus.end());
-        //     gamma_minus.assign(tempgamma_minus.begin(),tempgamma_minus.end());
-        // }
     }
-    temperature *= coolingrate;
-    return;
+    for (int i = 0; i < gamma_minus.size(); i++){
+        for (int j = 0; j < gamma_minus.size(); j++){
+            if (gamma_minus[j] == i+1){
+                pos_minus[i] = j+1;
+            }
+        }
+    }  
 }
 
 // make the picture of the direction graph
@@ -239,28 +234,21 @@ inline void grapher::initializeDAG(){
     //2  L   ^
     //3  L   L   ^
     for (int i = 0; i < directiongraph.size(); i++){
-        
         x = gamma_minus[i] ;
-
         for (int j = 0; j < i; j++){
-            
             y = gamma_minus[j];
-
             if ( directiongraph[ x - 1 ][ y - 1 ] == 1 ){ 
                 // from u to v, weight
-                
                 HorizontalGraph->addEdge( y , x , bstack[y - 1].width );
-
             }else if( directiongraph[ x - 1 ][ y - 1 ] == 2 ){ // dir == 2
-
                 VerticalGraph->addEdge( y , x , bstack[y - 1].height);
             }
         }
     }
 }
 
+// do not use!! this is not working yet!!!!
 inline void grapher::DAGreconnect( int u ){
-   
     for (int i = 0; i < directiongraph.size(); i++){
         HorizontalGraph->eraseEdge(gamma_minus[i],u);
         HorizontalGraph->eraseEdge(u,gamma_minus[i]);
@@ -292,13 +280,7 @@ inline void grapher::DAGreconnect( int u ){
     }
 }
 
-inline void grapher::perturbs_M1(){  // swap gamma_minus
-    x = rand()%(numofblocks-1)+1;
-    y = x;
-    // make sure no same point change
-    while (y == x){
-        y = rand()%(numofblocks-1)+1;
-    }
+inline void grapher::perturbs_M1(int x,int y){  // swap gamma_minus
     
     int temparray[2] = {x,y};
 
@@ -344,32 +326,13 @@ inline void grapher::perturbs_M1(){  // swap gamma_minus
             }
         }
     }
-    
-    // debug use
-    // cout<<endl<<"graph :"<<endl;
-    // for (int i = 0; i < directiongraph.size(); i++){
-    //     for (int j = 0; j < directiongraph[i].size(); j++){
-    //         cout<<directiongraph[i][j]<<"  ";
-    //     }cout<<endl;
-    // }
-    // cout<<"--------------------------------"<<endl;
-
     // reconnect the edge
-    for (int i = 0; i < 2; i++){    
-        DAGreconnect(temparray[i]);
-    }
-
+    // for (int i = 0; i < 2; i++){    
+    //     DAGreconnect(temparray[i]);
+    // }
 }
 
-inline void grapher::perturbs_M2(){ // swap gamma_plus
-    // random pick the position to swap
-    x = rand()%(numofblocks-1)+1;
-    y = x;
-    // make sure no same point change
-    while (y == x){
-        y = rand()%(numofblocks-1)+1;
-    }
-    
+inline void grapher::perturbs_M2(int x,int y){ // swap gamma_plus
     int temparray[2] = {x,y};
 
     //switch the x and y in gamma+
@@ -413,31 +376,14 @@ inline void grapher::perturbs_M2(){ // swap gamma_plus
                 directiongraph[j][i] = 2;
             }
         }
-    }
-
-    // debug use
-    // cout<<endl<<"graph :"<<endl;
-    // for (int i = 0; i < directiongraph.size(); i++){
-    //     for (int j = 0; j < directiongraph[i].size(); j++){
-    //         cout<<directiongraph[i][j]<<"  ";
-    //     }cout<<endl;
-    // }
-    // cout<<"--------------------------------"<<endl;
-    
+    } 
     // reconnect the edge
-    for (int i = 0; i < 2; i++){    
-        DAGreconnect(temparray[i]);
-    }
+    // for (int i = 0; i < 2; i++){    
+    //     DAGreconnect(temparray[i]);
+    // }
 }
 
-inline void grapher::perturbs_M3(){
-    x = rand()%(numofblocks-1)+1;
-    y = x;
-    // make sure no same point change
-    while (y == x){
-        y = rand()%(numofblocks-1)+1;
-    }
-    
+inline void grapher::perturbs_M3(int x,int y){
     int temparray[2] = {x,y};
 
     //switch the x and y in gamma+
@@ -491,45 +437,41 @@ inline void grapher::perturbs_M3(){
         }
     }
 
-    // debug use
-    // cout<<endl<<"graph :"<<endl;
-    // for (int i = 0; i < directiongraph.size(); i++){
-    //     for (int j = 0; j < directiongraph[i].size(); j++){
-    //         cout<<directiongraph[i][j]<<"  ";
-    //     }cout<<endl;
-    // }
-    // cout<<"--------------------------------"<<endl;
-    
     // reconnect the edge
-    for (int i = 0; i < 2; i++){    
-        DAGreconnect(temparray[i]);
-    }
+    // for (int i = 0; i < 2; i++){    
+    //     DAGreconnect(temparray[i]);
+    // }
 }
 
-// print out the best solution
+// print out the set axises 
 inline void grapher::layout(){
     // look from gamma_minus first to gamma_minus end
-    for (int i = 0; i < tempgamma_minus.size(); i++){
+    thisHeight = 0;
+    thisWidth = 0;
+    for (int i = 0; i < gamma_minus.size(); i++){
         x = 0;
         y = 0;
         for (int j = 0 ;j < i ; j++){
             // cout<< gamma_minus[j] <<" ";
-            if ( directiongraph[ tempgamma_minus[i] - 1 ][ tempgamma_minus[j] - 1 ] == 1 ) {
+            if ( directiongraph[ gamma_minus[i] - 1 ][ gamma_minus[j] - 1 ] == 1 ) {
                 // if = 2, then add on to x axis
-                x = max<int>( x , bstack[ tempgamma_minus[j] - 1 ].getx2() );
+                x = max<int>( x , bstack[ gamma_minus[j] - 1 ].getx2() );
             }else{
-                y = max<int>( y , bstack[ tempgamma_minus[j] - 1 ].gety2() );
+                y = max<int>( y , bstack[ gamma_minus[j] - 1 ].gety2() );
             }
         }
-        bstack[ tempgamma_minus[i] - 1].setxy(x,y);
+        bstack[ gamma_minus[i] - 1].setxy(x,y);
+        thisWidth = thisWidth>bstack[gamma_minus[i] - 1].getx2()?thisWidth:bstack[gamma_minus[i] - 1].getx2();
+        thisHeight = thisHeight>bstack[gamma_minus[i] - 1].gety2()?thisHeight:bstack[gamma_minus[i] - 1].gety2();
     }
     
     // show all blocks' position
-    for (int i = 0; i < numofblocks; i++){
-        cout <<endl<< bstack[ tempgamma_minus[i] - 1 ].name <<" "
-            << bstack[ tempgamma_minus[i] - 1 ].getx1() << " "
-             << bstack[ tempgamma_minus[i] - 1 ].gety1();
-    }
-    
+    // for (int i = 0; i < numofblocks; i++){
+    //     cout << bstack[ tempgamma_minus[i] - 1 ].name <<" "
+    //          << bstack[ tempgamma_minus[i] - 1 ].getx1() << " "
+    //          << bstack[ tempgamma_minus[i] - 1 ].gety1() << " "
+    //          << bstack[ tempgamma_minus[i] - 1 ].getx2() << " "
+    //          << bstack[ tempgamma_minus[i] - 1 ].gety2() << " "<<endl;
+    // }
 }
 

@@ -14,13 +14,8 @@ using namespace std;
 class plotmanager{
 private:
     int numblocks = 0,
-        endtime = 500,
-
-        // draw use
-        xtics = 40,
-        ytics = 40,
-        boundarx = 400,
-        boundary = 400,
+        endtime = 585, //up to 9 minutes 45 sec for recursive time limit
+        
         bestHeight = 3000,
         bestWidth = 3000,
         x,y; // dummy use
@@ -61,8 +56,6 @@ void plotmanager::loadfile(string file){
     fin>>strbuffer>>numblocks;
     fin>>strbuffer>>minaspectratio
         >>strbuffer>>maxaspectratio;
-    xtics = boundarx/5;
-    ytics = boundary/5;
     //start reading each blocks
     for (int i = 0; i < numblocks; i++){
         //  <name> <width> <height>
@@ -86,14 +79,17 @@ inline void plotmanager::createplot(){
     annealing();
 
     // finishing
-    // get the best sol
-
-    cout<<endl<<"best :";
+    cout<<"best :"<<endl;
     g2->layout(); // load the axis
+    // get the best sol
     bstack = g2->bstack;
-
+    for (int i = 0; i < numblocks; i++){
+        cout<<bstack[i].name<<" "<<bstack[i].width<<" "<<bstack[i].height<<" "
+                            <<bstack[i].getx1()<<" " << bstack[i].gety1()<<" "
+                            <<bstack[i].getx2()<<" " << bstack[i].gety2()<<endl;
+    }
     bestHeight = g2->bestHeight;
-    cout<<endl<<"bestHeight = "<<bestHeight;
+    cout<<"bestHeight = "<<bestHeight;
     bestWidth = g2->bestWidth;
     cout<<endl<<"bestWidth = "<<bestWidth;
     cout<<endl<<"bestratiocost = "<< float(g2->cost*g2->cost)/(bestHeight*bestWidth);
@@ -102,27 +98,32 @@ inline void plotmanager::createplot(){
 }
 
 inline void plotmanager::annealing(){
-    // end = time(NULL);
     double diff = 0,tempdiff;
     int perturb_mode,times = 0;
+    perturb_mode = 0;
     while ( diff < endtime ){ // wait until 10 minutes
         
         // switchcase to choose perturb
         perturb_mode = rand()%(100) + 1;
-
+        
         // counting
-        // cout<<"times:"<<times++<<" ";
+        x = rand()%(numblocks-1)+1;
+        y = x;
+        // make sure no same point change
+        while (y == x){
+            y = rand()%(numblocks-1)+1;
+        }
 
         //execute annealing
         switch ( perturb_mode ){
             case 1 ... 20:
-                g2->perturbs_M3();
+                g2->perturbs_M3( x , y );
                 break;
             case 21 ... 60:
-                g2->perturbs_M2();
+                g2->perturbs_M2( x , y );
                 break;
             case 61 ... 100:
-                g2->perturbs_M1();
+                g2->perturbs_M1( x , y );
                 break;
             default:
                 //dummy respond
@@ -132,24 +133,22 @@ inline void plotmanager::annealing(){
         }
         // check size
         g2->Costcalculation( times++ );
-        cout<<endl<<"times = "<<times<<endl;
-        g2->layout();
         // setting break time
         end = time(NULL);
         diff = difftime(end,start);
 
-        // debug use
-        if (tempdiff != diff){
-            tempdiff = diff;
-            cout<<"clock : "<<diff<<endl;
-            if (int(tempdiff)%5 == 0){
-                bestscorelog.push_back(g2->cost);
-            }
-        }
-        if (times >= 120){
-            break;
-        }
-        
+        //        annealing loader!!!       //
+        // outputlog use 
+        // if (tempdiff != diff){
+        //     tempdiff = diff;
+            // cout<<"clock : "<<diff<<endl;
+            // log using
+        //     if (int(tempdiff)%5 == 0){
+        //         bestscorelog.push_back(g2->cost);
+        //     }
+        // }
+        // faster or for debugging
+        // if (times++ >= 800 ) break;   
     }
     
 }
@@ -178,6 +177,11 @@ inline void plotmanager::outputfile(string file){
 }
 
 void plotmanager::outputpic(){
+    // draw use
+    int xtics = 40,
+        ytics = 40,
+        boundarx = 400,
+        boundary = 400;
     //output
     string file = "../output/"+to_string(numblocks)+".gp";
     fstream fout;
