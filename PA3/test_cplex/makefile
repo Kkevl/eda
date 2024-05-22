@@ -7,7 +7,7 @@ CXXFLAGS = -I../cplex_studio/concert/include -I../cplex_studio/cplex/include
 # Linker flags
 LDFLAGS = -L../cplex_studio/cplex/lib/x86-64_linux/static_pic -L../cplex_studio/concert/lib/x86-64_linux/static_pic -lilocplex -lcplex -lconcert -lm -lpthread -ldl   #specify the path of library archives 
 # Executable name
-TARGET = my_program
+TARGET = tpl
 
 # Source files
 SRCS = main.cpp
